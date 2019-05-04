@@ -66,6 +66,8 @@ if __name__ == '__main__':
         print('''
         --gen-file  Generates a file with guesses: a<operand>b=<correct> | <guess>
         ''')
+        sys.exit()
+
     # init
     calcnn = NN(3, 10, 1, 3, actifunc, dactifunc, 0.1)
 

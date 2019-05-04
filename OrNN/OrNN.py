@@ -21,6 +21,8 @@ if __name__ == '__main__':
         --test  Run tests [got, correct]
         --plot  Plot the NN
         ''')
+        sys.exit()
+
     # init
     ornn = NN(2, 2, 1, 2, actifunc, dactifunc, 0.1)
 
