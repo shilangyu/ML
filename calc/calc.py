@@ -1,7 +1,7 @@
 from NN import NN
 import math
 import random
-import sys
+import argparse
 
 
 def actifunc(x):
@@ -62,11 +62,15 @@ def unmap(x, sign):
 
 
 if __name__ == '__main__':
-    if '--help' in sys.argv:
-        print('''
-        --gen-file  Generates a file with guesses: a<operand>b=<correct> | <guess>
-        ''')
-        sys.exit()
+    parser = argparse.ArgumentParser(
+        description='Creates a neural network that learns how to perform [/*-+] calculations')
+    parser.add_argument('train_amount', type=int,
+                        help='integer representing the amount of train sessions')
+    parser.add_argument('--gen-file', dest='gen_file', action='store_const',
+                        const=True, default=False,
+                        help='creates outs.txt with NN guesses: <in0><operand><in1>=<correct> | <NN_guess>')
+
+    args = parser.parse_args()
 
     # init
     calcnn = NN(3, 10, 1, 3, actifunc, dactifunc, 0.1)
@@ -84,7 +88,7 @@ if __name__ == '__main__':
     # training
     inputs = list(map(lambda x: x.mapped_inputs(), traindata))
     goal_ouputs = list(map(lambda x: x.mapped_result(), traindata))
-    calcnn.train(inputs, goal_ouputs, 300000)
+    calcnn.train(inputs, goal_ouputs, args.train_amount)
 
     # testing
     inputs = list(map(lambda x: x.mapped_inputs(), testdata))
@@ -94,7 +98,7 @@ if __name__ == '__main__':
     print(f'Accuracy: {acc*100}%')
 
     # testing with output to file
-    if '--gen-file' in sys.argv:
+    if args.gen_file:
         guesses = []
         for data in testdata:
             inputs = data.mapped_inputs()
