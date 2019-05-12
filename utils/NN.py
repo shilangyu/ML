@@ -89,7 +89,7 @@ class NN:
         for i in range(amount):
             self.backpropagate(inputs[choices[i]], goal_outputs[choices[i]])
 
-    def test(self, inputs, goal_outputs, amount):
+    def test_accuracy(self, inputs, goal_outputs, amount):
         total_error = np.array(inputs[0]) * 0
         choices = np.random.randint(len(inputs), size=amount)
         for i in range(amount):
@@ -97,6 +97,16 @@ class NN:
                 inputs[choices[i]]) - goal_outputs[choices[i]])
 
         return np.sum((amount - total_error) / amount) / len(total_error)
+
+    def test_guesses(self, inputs, goal_outputs, amount):
+        guessed_correctly = 0
+        choices = np.random.randint(len(inputs), size=amount)
+        for i in range(amount):
+            curr_output = self.feedforward(inputs[choices[i]])
+            curr_goal = goal_outputs[choices[i]]
+            guessed_correctly += int(np.argmax(curr_output)
+                                     == np.argmax(curr_goal))
+        return guessed_correctly / amount
 
     def serialize(self):
         return {
