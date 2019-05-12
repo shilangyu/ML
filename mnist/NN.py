@@ -98,6 +98,16 @@ class NN:
 
         return np.sum((amount - total_error) / amount) / len(total_error)
 
+    def test_guesses(self, inputs, goal_outputs, amount):
+        guessed_correctly = 0
+        choices = np.random.randint(len(inputs), size=amount)
+        for i in range(amount):
+            curr_output = self.feedforward(inputs[choices[i]])
+            curr_goal = goal_outputs[choices[i]]
+            guessed_correctly += int(np.argmax(curr_output)
+                                     == np.argmax(curr_goal))
+        return guessed_correctly / amount
+
     def serialize(self):
         return {
             'input_w': self.input_w.tolist(),

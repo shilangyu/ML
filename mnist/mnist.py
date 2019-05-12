@@ -54,5 +54,8 @@ if __name__ == '__main__':
 
     mapped_train_pixels = list(map(map_pixels, train_pixels))
     mapped_train_labels = list(map(map_labels, train_labels))
-
     mnistnn.train(mapped_train_pixels, mapped_train_labels, args.train_amount)
+
+    mapped_test_pixels = list(map(map_pixels, test_pixels))
+    mapped_test_labels = list(map(map_labels, test_labels))
+    print(mnistnn.test_guesses(mapped_test_pixels, mapped_test_labels, 1000))
