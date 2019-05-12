@@ -37,12 +37,27 @@ if __name__ == '__main__':
         description='Creates a NN for the classical mnist dataset (without a convolutional layer)')
     parser.add_argument('train_amount', type=int,
                         help='integer representing the amount of training sessions')
+    parser.add_argument('--test-every', dest='test_every', default=False, type=int,
+                        help='prints out the accuracy every x trains')
     args = parser.parse_args()
 
     train_pixels = []
     train_labels = []
     test_pixels = []
     test_labels = []
+
+    sessions = []
+    if args.test_every:
+        n = args.train_amount
+        while True:
+            if n - args.test_every <= 0:
+                sessions.append(n)
+                break
+            else:
+                sessions.append(args.test_every)
+                n -= args.test_every
+    else:
+        sessions.append(args.train_amount)
 
     load_dataset("train_pixels.gz", "train_labels.gz",
                  train_pixels, train_labels, 5000)
@@ -54,8 +69,10 @@ if __name__ == '__main__':
 
     mapped_train_pixels = list(map(map_pixels, train_pixels))
     mapped_train_labels = list(map(map_labels, train_labels))
-    mnistnn.train(mapped_train_pixels, mapped_train_labels, args.train_amount)
-
     mapped_test_pixels = list(map(map_pixels, test_pixels))
     mapped_test_labels = list(map(map_labels, test_labels))
-    print(mnistnn.test_guesses(mapped_test_pixels, mapped_test_labels, 1000))
+
+    for sess in sessions:
+        mnistnn.train(mapped_train_pixels, mapped_train_labels, sess)
+        print(mnistnn.test_guesses(mapped_test_pixels,
+                                   mapped_test_labels, 1000)*100, '%')
