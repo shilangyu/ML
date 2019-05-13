@@ -73,6 +73,7 @@ if __name__ == '__main__':
     else:
         sessions.append(args.train_amount)
 
+    print('loading data...')
     load_dataset("train_pixels.gz", "train_labels.gz",
                  train_pixels, train_labels, 5000)
     load_dataset("test_pixels.gz", "test_labels.gz",
@@ -89,6 +90,7 @@ if __name__ == '__main__':
     mapped_test_pixels = list(map(map_pixels, test_pixels))
     mapped_test_labels = list(map(map_labels, test_labels))
 
+    print('training...')
     for sess in sessions:
         mnistnn.train(mapped_train_pixels, mapped_train_labels, sess)
         print(mnistnn.test_guesses(mapped_test_pixels,
