@@ -32,6 +32,9 @@ if __name__ == '__main__':
     parser.add_argument('--plot', dest='plot', action='store_const',
                         const=True, default=False,
                         help='plots the NN weights')
+    parser.add_argument('-i', dest='interactive', action='store_const',
+                        const=True, default=False,
+                        help='once done training starts an interactive mode')
 
     args = parser.parse_args()
 
@@ -45,9 +48,9 @@ if __name__ == '__main__':
 
     # training
     for x in range(args.train_amount):
-        input = [random.randint(0, 1), random.randint(0, 1)]
-        goal_output = [int(input[0] or input[1])]
-        ornn.backpropagate(input, goal_output)
+        inputs = [random.randint(0, 1), random.randint(0, 1)]
+        goal_output = [int(inputs[0] or inputs[1])]
+        ornn.backpropagate(inputs, goal_output)
 
     # testing
     if args.test:
@@ -69,3 +72,12 @@ if __name__ == '__main__':
     if args.save:
         with open('brain.json', 'w') as f:
             json.dump(ornn.serialize(), f)
+
+    # interactive
+    if args.interactive:
+        print('type bools and get the NN\'s guess! Ctrl+C to exit')
+        while True:
+            in0 = input('Enter first bool: ').lower() == 'true'
+            in1 = input('Enter second bool: ').lower() == 'true'
+            out = ornn.feedforward([int(in0), int(in1)])[0]
+            print(f'NN guess: {bool(in0)} || {bool(in1)} = {bool(round(out))}')
