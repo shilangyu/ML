@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<title>Draw digits</title>
+	</head>
+	<body>
+		<script>
+			let a = new Array(28 * 28).fill(null).map((e, i) => (i > 255 ? 0 : i))
+			fetch(`/guess?pixels=${a.join('v')}`, {
+				method: 'POST',
+				headers: {
+					'content-type': 'text/html'
+				}
+			})
+				.then(e => e.json())
+				.then(console.log)
+				.catch(console.error)
+		</script>
+		<i>hello there</i>
+	</body>
+</html>

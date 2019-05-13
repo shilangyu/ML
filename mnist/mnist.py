@@ -2,6 +2,10 @@ import json
 import gzip
 import argparse
 import numpy as np
+import webbrowser
+import simple_http_server.server as server
+from simple_http_server import request_map
+from simple_http_server import StaticFile
 from NN import NN
 
 
@@ -45,6 +49,9 @@ if __name__ == '__main__':
                         help='saves the weights in brain.json')
     parser.add_argument('--load', dest='load', default=False,
                         help='loads given brain')
+    parser.add_argument('-i', dest='interactive', action='store_const',
+                        const=True, default=False,
+                        help='once done training starts an interactive mode')
 
     args = parser.parse_args()
 
@@ -90,3 +97,20 @@ if __name__ == '__main__':
     if args.save:
         with open('brain.json', 'w') as f:
             json.dump(mnistnn.serialize(), f)
+
+    if args.interactive:
+        @request_map('/')
+        def get_root():
+            return StaticFile('./index.html', 'text/html; charset=utf-8')
+
+        @request_map('/favicon.ico')
+        def favicon():
+            return StaticFile('./favicon.ico', 'image/x-icon')
+
+        @request_map('/guess', method='POST')
+        def take_guess(pixels):
+            inputs = map_pixels([int(x) for x in pixels.split('v')])
+            return {'guess': int(np.argmax(mnistnn.feedforward(inputs)))}
+
+        webbrowser.open('http://localhost:9090')
+        server.start()
