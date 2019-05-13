@@ -117,3 +117,11 @@ class NN:
             'hidden_b': self.hidden_b.tolist(),
             'output_b': self.output_b.tolist()
         }
+
+    def load_brain(self, brain):
+        self.input_w = np.array(brain['input_w'])
+        self.hidden_w = np.array(brain['hidden_w'])
+        self.output_w = np.array(brain['output_w'])
+        self.input_b = np.array(brain['input_b'])
+        self.hidden_b = np.array(brain['hidden_b'])
+        self.output_b = np.array(brain['output_b'])
