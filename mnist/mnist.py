@@ -1,3 +1,4 @@
+import json
 import gzip
 import argparse
 import numpy as np
@@ -39,6 +40,12 @@ if __name__ == '__main__':
                         help='integer representing the amount of training sessions')
     parser.add_argument('--test-every', dest='test_every', default=False, type=int,
                         help='prints out the accuracy every x trains')
+    parser.add_argument('--save', dest='save', action='store_const',
+                        const=True, default=False,
+                        help='saves the weights in brain.json')
+    parser.add_argument('--load', dest='load', default=False,
+                        help='loads given brain')
+
     args = parser.parse_args()
 
     train_pixels = []
@@ -66,6 +73,9 @@ if __name__ == '__main__':
 
     mnistnn = NN(28*28, 16, 10, 2,
                  lambda x: 1 / (1 + np.exp(-x)), lambda y: y * (1-y), 0.1)
+    if args.load:
+        with open(args.load) as f:
+            mnistnn.load_brain(json.load(f))
 
     mapped_train_pixels = list(map(map_pixels, train_pixels))
     mapped_train_labels = list(map(map_labels, train_labels))
@@ -76,3 +86,7 @@ if __name__ == '__main__':
         mnistnn.train(mapped_train_pixels, mapped_train_labels, sess)
         print(mnistnn.test_guesses(mapped_test_pixels,
                                    mapped_test_labels, 1000)*100, '%')
+
+    if args.save:
+        with open('brain.json', 'w') as f:
+            json.dump(mnistnn.serialize(), f)

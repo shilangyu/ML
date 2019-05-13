@@ -3,6 +3,7 @@ import argparse
 import matplotlib.pyplot as plt
 import random
 import math
+import json
 from NN import NN
 
 
@@ -23,6 +24,11 @@ if __name__ == '__main__':
     parser.add_argument('--test', dest='test', action='store_const',
                         const=True, default=False,
                         help='test the NN: <in0> || <in1> == <NN_guess>')
+    parser.add_argument('--save', dest='save', action='store_const',
+                        const=True, default=False,
+                        help='saves the weights in brain.json')
+    parser.add_argument('--load', dest='load', default=False,
+                        help='loads given brain')
     parser.add_argument('--plot', dest='plot', action='store_const',
                         const=True, default=False,
                         help='plots the NN weights')
@@ -31,6 +37,11 @@ if __name__ == '__main__':
 
     # init
     ornn = NN(2, 2, 1, 2, actifunc, dactifunc, 0.1)
+
+    # load brain
+    if args.load:
+        with open(args.load) as f:
+            ornn.load_brain(json.load(f))
 
     # training
     for x in range(args.train_amount):
@@ -53,3 +64,8 @@ if __name__ == '__main__':
         plt.imshow(data, cmap='gray', interpolation='nearest')
         plt.gca().invert_yaxis()
         plt.show()
+
+    # save brain
+    if args.save:
+        with open('brain.json', 'w') as f:
+            json.dump(ornn.serialize(), f)

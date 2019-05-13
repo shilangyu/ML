@@ -2,6 +2,7 @@ from NN import NN
 import math
 import random
 import argparse
+import json
 
 
 def actifunc(x):
@@ -69,11 +70,21 @@ if __name__ == '__main__':
     parser.add_argument('--gen-file', dest='gen_file', action='store_const',
                         const=True, default=False,
                         help='creates outs.txt with NN guesses: <in0><operand><in1>=<correct> | <NN_guess>')
+    parser.add_argument('--save', dest='save', action='store_const',
+                        const=True, default=False,
+                        help='saves the weights in brain.json')
+    parser.add_argument('--load', dest='load', default=False,
+                        help='loads given brain')
 
     args = parser.parse_args()
 
     # init
     calcnn = NN(3, 10, 1, 3, actifunc, dactifunc, 0.1)
+
+    # load brain
+    if args.load:
+        with open(args.load) as f:
+            calcnn.load_brain(json.load(f))
 
     # data
     traindata = []
@@ -109,3 +120,8 @@ if __name__ == '__main__':
 
         with open('outs.txt', mode='w') as f:
             f.write('\n'.join(guesses))
+
+    # save brain
+    if args.save:
+        with open('brain.json', 'w') as f:
+            json.dump(calcnn.serialize(), f)
