@@ -50,16 +50,7 @@ class dataline:
             return output * (9 - 1/9) + 1/9
 
     def tostring(self):
-        return f'{int(self.first)}{self.operand}{int(self.second)}={self.result}'
-
-
-def unmap(x, sign):
-    if sign == '*':
-        return x*81
-    elif sign == '+':
-        return x*18
-    elif sign == '-':
-        return (x-.5)*18
+        return f'{int(self.first)} {self.operand} {int(self.second)} = {self.result}'
 
 
 if __name__ == '__main__':
@@ -75,6 +66,9 @@ if __name__ == '__main__':
                         help='saves the weights in brain.json')
     parser.add_argument('--load', dest='load', default=False,
                         help='loads given brain')
+    parser.add_argument('-i', dest='interactive', action='store_const',
+                        const=True, default=False,
+                        help='once done training starts an interactive mode')
 
     args = parser.parse_args()
 
@@ -125,3 +119,14 @@ if __name__ == '__main__':
     if args.save:
         with open('brain.json', 'w') as f:
             json.dump(calcnn.serialize(), f)
+
+    # interactive
+    if args.interactive:
+        print('type two numbers and an operand and get the NN\'s guess! Ctrl+C to exit')
+        while True:
+            data = input(
+                'enter operation in <num1><operand><num2> format. No spaces and numbers are in 1-9 range.:\n')
+            parsed_data = dataline(f'{data}=1234')
+            out = calcnn.feedforward(parsed_data.mapped_inputs())[0]
+            print(
+                f'NN guess: {data} = {parsed_data.unmap_output(out)}')
