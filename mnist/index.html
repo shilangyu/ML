@@ -4,21 +4,56 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.min.js"></script>
 		<title>Draw digits</title>
 	</head>
 	<body>
+		<div id="parent"></div>
+		<button id="clear">Clear</button>
+		<button id="guesser">Guess</button>
+		<p id="guess"></p>
 		<script>
-			let a = new Array(28 * 28).fill(null).map((e, i) => (i > 255 ? 0 : i))
-			fetch(`/guess?pixels=${a.join('v')}`, {
-				method: 'POST',
-				headers: {
-					'content-type': 'text/html'
+			let prevPos
+
+			function setup() {
+				createCanvas(28, 28).parent('parent')
+				pixelDensity(1)
+				stroke(255)
+				background(0)
+
+				document.querySelector('#clear').addEventListener('click', e => {
+					background(0)
+					document.querySelector('#guess').innerHTML = ''
+				})
+				document.querySelector('#guesser').addEventListener('click', async () => {
+					const pixs = []
+					loadPixels()
+					for (let i = 0; i < 4 * width * height; i += 4) {
+						pixs.push((pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3)
+					}
+					updatePixels()
+
+					const result = await fetch(`/guess?pixels=${pixs.join('v')}`, {
+						method: 'POST',
+						headers: {
+							'content-type': 'text/html'
+						}
+					})
+					const json = await result.json()
+					document.querySelector('#guess').innerHTML = `i think its a ${json.guess} 🤔`
+				})
+			}
+
+			function draw() {
+				if (mouseIsPressed) {
+					if (prevPos) {
+						line(prevPos.x, prevPos.y, mouseX, mouseY)
+					}
+					prevPos = createVector(mouseX, mouseY)
+				} else {
+					prevPos = null
 				}
-			})
-				.then(e => e.json())
-				.then(console.log)
-				.catch(console.error)
+			}
 		</script>
-		<i>hello there</i>
 	</body>
 </html>
