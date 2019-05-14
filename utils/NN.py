@@ -35,12 +35,9 @@ class NN:
 
         return self.nodesave[-1]
 
-    def backpropagate(self, input, goal_output):
+    def get_deltas(self, input, goal_output):
         self.feedforward(input)
         input = np.array(input)
-
-        # cost
-        cost = np.sum((goal_output - self.nodesave[-1]) ** 2 / 2)
 
         error = list(range(len(self.nodesave)))
 
@@ -71,6 +68,12 @@ class NN:
         input_gradient = self.dactifunc(self.nodesave[0]) * error[0] * self.LR
         input_delta = input_gradient[:, None].dot(input[None])
 
+        return (input_delta, input_gradient), (hidden_delta, hidden_gradient), (output_delta, output_gradient)
+
+    def adjust_weights(self, deltas):
+        (input_delta, input_gradient), (hidden_delta, hidden_gradient), (output_delta,
+                                                                         output_gradient) = deltas
+
         # weight adjustment
         self.output_w += output_delta
         self.output_b += output_gradient
@@ -82,12 +85,52 @@ class NN:
         self.input_w += input_delta
         self.input_b += input_gradient
 
+    def backpropagate(self, input, goal_output):
+        deltas = self.get_deltas(input, goal_output)
+
+        # cost
+        cost = np.sum((goal_output - self.nodesave[-1]) ** 2 / 2)
+
+        # weight adjustment
+        self.adjust_weights(deltas)
+
         return cost
 
     def online_train(self, inputs, goal_outputs, amount):
         choices = np.random.randint(len(inputs), size=amount)
         for i in range(amount):
             self.backpropagate(inputs[choices[i]], goal_outputs[choices[i]])
+
+    def batch_train(self, inputs, goal_outputs, epochs, batch_size):
+        choices = np.random.randint(len(inputs), size=batch_size*epochs)
+        for epoch in range(epochs):
+            batch_deltas = self.get_deltas(
+                inputs[choices[epoch*batch_size]], goal_outputs[choices[epoch*batch_size]])
+            id = np.array(batch_deltas[0][0])
+            ig = np.array(batch_deltas[0][1])
+            hd = np.array(batch_deltas[1][0])
+            hg = np.array(batch_deltas[1][1])
+            od = np.array(batch_deltas[2][0])
+            og = np.array(batch_deltas[2][1])
+
+            for batch_nr in range(batch_size - 1):
+                i = epoch*batch_size + batch_nr + 1
+                batch_deltas = self.get_deltas(
+                    inputs[choices[i]], goal_outputs[choices[i]])
+                id += np.array(batch_deltas[0][0])
+                ig += np.array(batch_deltas[0][1])
+                hd += np.array(batch_deltas[1][0])
+                hg += np.array(batch_deltas[1][1])
+                od += np.array(batch_deltas[2][0])
+                og += np.array(batch_deltas[2][1])
+
+            id /= batch_size
+            ig /= batch_size
+            hd /= batch_size
+            hg /= batch_size
+            od /= batch_size
+            og /= batch_size
+            self.adjust_weights(((id, ig), (hd, hg), (od, og)))
 
     def test_accuracy(self, inputs, goal_outputs, amount):
         total_error = np.array(inputs[0]) * 0
