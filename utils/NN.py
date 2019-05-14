@@ -84,7 +84,7 @@ class NN:
 
         return cost
 
-    def train(self, inputs, goal_outputs, amount):
+    def online_train(self, inputs, goal_outputs, amount):
         choices = np.random.randint(len(inputs), size=amount)
         for i in range(amount):
             self.backpropagate(inputs[choices[i]], goal_outputs[choices[i]])
