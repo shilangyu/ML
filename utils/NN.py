@@ -1,5 +1,6 @@
 import numpy as np
 import yaml
+import activation_functions
 
 
 class NN:
@@ -19,10 +20,12 @@ class NN:
         self.LR = learning_rate
 
     @staticmethod
-    def from_config(path, a, d):
+    def from_config(path):
         with open(path) as f:
             data = yaml.safe_load(f)
-            return NN(**data, actifunc=a, dactifunc=d)
+            activation_function = data['activation_function']
+            del data['activation_function']
+            return NN(**data, actifunc=getattr(activation_functions, activation_function), dactifunc=getattr(activation_functions, 'd'+activation_function))
 
     def feedforward(self, input):
         input = np.array(input)
