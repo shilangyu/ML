@@ -79,8 +79,7 @@ if __name__ == '__main__':
     load_dataset("test_pixels.gz", "test_labels.gz",
                  test_pixels, test_labels, 5000)
 
-    mnistnn = NN.from_config('config.yaml', lambda x: 1 /
-                             (1 + np.exp(-x)), lambda y: y * (1-y))
+    mnistnn = NN.from_config('config.yaml')
     if args.load:
         with open(args.load) as f:
             mnistnn.load_brain(json.load(f))
