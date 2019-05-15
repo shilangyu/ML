@@ -1,21 +1,28 @@
 import numpy as np
+import yaml
 
 
 class NN:
-    def __init__(self, inputNeurons, hiddenNeurons, outputNeurons, hiddenLayers, actifunc, dactifunc, LR):
-        self.input_w = np.random.rand(hiddenNeurons, inputNeurons) * 2 - 1
+    def __init__(self, inputs, hidden_nodes, outputs, hidden_layers, actifunc, dactifunc, learning_rate):
+        self.input_w = np.random.rand(hidden_nodes, inputs) * 2 - 1
         self.hidden_w = np.random.rand(
-            hiddenLayers - 1, hiddenNeurons, hiddenNeurons) * 2 - 1
-        self.output_w = np.random.rand(outputNeurons, hiddenNeurons) * 2 - 1
+            hidden_layers - 1, hidden_nodes, hidden_nodes) * 2 - 1
+        self.output_w = np.random.rand(outputs, hidden_nodes) * 2 - 1
 
-        self.input_b = np.random.rand(hiddenNeurons) * 2 - 1
-        self.hidden_b = np.random.rand(hiddenLayers - 1, hiddenNeurons) * 2 - 1
-        self.output_b = np.random.rand(outputNeurons) * 2 - 1
+        self.input_b = np.random.rand(hidden_nodes) * 2 - 1
+        self.hidden_b = np.random.rand(hidden_layers - 1, hidden_nodes) * 2 - 1
+        self.output_b = np.random.rand(outputs) * 2 - 1
 
         self.actifunc = actifunc
         self.dactifunc = dactifunc
 
-        self.LR = LR
+        self.LR = learning_rate
+
+    @staticmethod
+    def from_config(path, a, d):
+        with open(path) as f:
+            data = yaml.safe_load(f)
+            return NN(**data, actifunc=a, dactifunc=d)
 
     def feedforward(self, input):
         input = np.array(input)

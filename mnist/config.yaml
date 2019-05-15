@@ -1,0 +1,5 @@
+inputs: 784
+hidden_nodes: 20
+hidden_layers: 3
+outputs: 10
+learning_rate: 0.01

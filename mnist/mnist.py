@@ -79,8 +79,8 @@ if __name__ == '__main__':
     load_dataset("test_pixels.gz", "test_labels.gz",
                  test_pixels, test_labels, 5000)
 
-    mnistnn = NN(28*28, 16, 10, 2,
-                 lambda x: 1 / (1 + np.exp(-x)), lambda y: y * (1-y), 0.1)
+    mnistnn = NN.from_config('config.yaml', lambda x: 1 /
+                             (1 + np.exp(-x)), lambda y: y * (1-y))
     if args.load:
         with open(args.load) as f:
             mnistnn.load_brain(json.load(f))
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     print('training...')
     for sess in sessions:
-        mnistnn.train(mapped_train_pixels, mapped_train_labels, sess)
+        mnistnn.online_train(mapped_train_pixels, mapped_train_labels, sess)
         print(mnistnn.test_guesses(mapped_test_pixels,
                                    mapped_test_labels, 1000)*100, '%')
 
