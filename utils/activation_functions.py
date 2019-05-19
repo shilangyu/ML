@@ -17,3 +17,19 @@ def softmax(x):
 
 def dsoftmax(y):
     return y * (-y + 1)
+
+
+def tanh(x):
+    return np.tanh(x)
+
+
+def dtanh(y):
+    return 1 - y**2
+
+
+def relu(x):
+    return np.maximum(x, 0)
+
+
+def drelu(y):
+    return (y > 0) * 1
