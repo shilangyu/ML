@@ -40,7 +40,7 @@ class NN:
             self.nodesave[i+1] = self.actifunc(w.dot(self.nodesave[i]) + b)
 
         # output
-        self.nodesave[-1] = self.actifunc(
+        self.nodesave[-1] = activation_functions.softmax(
             self.output_w.dot(self.nodesave[-2]) + self.output_b)
 
         return self.nodesave[-1]
@@ -53,7 +53,7 @@ class NN:
 
         # output
         error[-1] = goal_output - self.nodesave[-1]
-        output_gradient = self.dactifunc(
+        output_gradient = activation_functions.dsoftmax(
             self.nodesave[-1]) * error[-1] * self.LR
         output_delta = output_gradient[:, None].dot(self.nodesave[-2][None])
 
