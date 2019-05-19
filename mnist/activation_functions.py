@@ -33,3 +33,11 @@ def relu(x):
 
 def drelu(y):
     return (y > 0) * 1
+
+
+def leaky_relu(x):
+    return np.where(x > 0, x, x*0.01)
+
+
+def dleaky_relu(y):
+    return np.where(y > 0, 1, 0.01)
