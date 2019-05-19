@@ -6,3 +6,4 @@ Future projects, ideas or enhancements
 - [x] premade activation functions
 - [ ] graph progress overtime
 - [ ] animate weights change
+- [ ] add debug mode
