@@ -75,9 +75,9 @@ if __name__ == '__main__':
 
     print('loading data...')
     load_dataset("train_pixels.gz", "train_labels.gz",
-                 train_pixels, train_labels, 5000)
+                 train_pixels, train_labels, 60000)
     load_dataset("test_pixels.gz", "test_labels.gz",
-                 test_pixels, test_labels, 5000)
+                 test_pixels, test_labels, 10000)
 
     mnistnn = NN.from_config('config.yaml')
     if args.load:
