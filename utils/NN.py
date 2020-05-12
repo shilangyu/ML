@@ -1,5 +1,6 @@
 import numpy as np
 import yaml
+
 import activation_functions
 
 
@@ -106,10 +107,13 @@ class NN:
 
         return cost
 
-    def online_train(self, inputs, goal_outputs, amount):
-        choices = np.random.randint(len(inputs), size=amount)
-        for i in range(amount):
-            self.backpropagate(inputs[choices[i]], goal_outputs[choices[i]])
+    def online_train(self, inputs, goal_outputs, epochs):
+        n = max(len(inputs), len(goal_outputs))
+        order = np.array(range(n))
+        for _ in range(epochs):
+            np.random.shuffle(order)
+            for i in order:
+                self.backpropagate(inputs[i], goal_outputs[i])
 
     def batch_train(self, inputs, goal_outputs, epochs, batch_size):
         choices = np.random.randint(len(inputs), size=batch_size*epochs)
@@ -151,15 +155,14 @@ class NN:
 
         return np.sum((amount - total_error) / amount) / len(total_error)
 
-    def test_guesses(self, inputs, goal_outputs, amount):
+    def test_guesses(self, inputs, goal_outputs):
         guessed_correctly = 0
-        choices = np.random.randint(len(inputs), size=amount)
-        for i in range(amount):
-            curr_output = self.feedforward(inputs[choices[i]])
-            curr_goal = goal_outputs[choices[i]]
-            guessed_correctly += int(np.argmax(curr_output)
-                                     == np.argmax(curr_goal))
-        return guessed_correctly / amount
+        n = max(len(inputs), len(goal_outputs))
+        for i, o in zip(inputs, goal_outputs):
+            curr_output = self.feedforward(i)
+            if np.argmax(o) == np.argmax(curr_output):
+                guessed_correctly += 1
+        return guessed_correctly / n
 
     def serialize(self):
         return {

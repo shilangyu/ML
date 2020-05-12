@@ -1,11 +1,12 @@
-import json
-import gzip
 import argparse
-import numpy as np
+import gzip
+import json
 import webbrowser
+
+import numpy as np
 import simple_http_server.server as server
-from simple_http_server import request_map
-from simple_http_server import StaticFile
+from simple_http_server import StaticFile, request_map
+
 from NN import NN
 
 
@@ -40,10 +41,10 @@ def map_pixels(pixel_array):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Creates a NN for the classical mnist dataset (without a convolutional layer)')
-    parser.add_argument('train_amount', type=int,
-                        help='integer representing the amount of training sessions')
+    parser.add_argument('epochs', type=int,
+                        help='integer representing the amount of training epochs')
     parser.add_argument('--test-every', dest='test_every', default=False, type=int,
-                        help='prints out the accuracy every x trains')
+                        help='prints out the accuracy every x epochs')
     parser.add_argument('--save', dest='save', action='store_const',
                         const=True, default=False,
                         help='saves the weights in brain.json')
@@ -60,25 +61,12 @@ if __name__ == '__main__':
     test_pixels = []
     test_labels = []
 
-    sessions = []
-    if args.test_every:
-        n = args.train_amount
-        while True:
-            if n - args.test_every <= 0:
-                sessions.append(n)
-                break
-            else:
-                sessions.append(args.test_every)
-                n -= args.test_every
-    else:
-        sessions.append(args.train_amount)
-
     mnistnn = NN.from_config('config.yaml')
     if args.load:
         with open(args.load) as f:
             mnistnn.load_brain(json.load(f))
 
-    if args.train_amount != 0:
+    if args.epochs != 0:
         print('loading data...')
         load_dataset("train_pixels.gz", "train_labels.gz",
                      train_pixels, train_labels, 60000)
@@ -91,11 +79,16 @@ if __name__ == '__main__':
         mapped_test_labels = list(map(map_labels, test_labels))
 
         print('training...')
-        for sess in sessions:
+        done_epoch = 0
+        while done_epoch < args.epochs:
+            epochs_todo = args.test_every if args.test_every else args.epochs
+            if args.test_every + done_epoch > args.epochs:
+                epochs_todo = args.epochs - done_epoch
             mnistnn.online_train(mapped_train_pixels,
-                                 mapped_train_labels, sess)
+                                 mapped_train_labels, epochs_todo)
             print(mnistnn.test_guesses(mapped_test_pixels,
-                                       mapped_test_labels, 1000)*100, '%')
+                                       mapped_test_labels)*100, '%')
+            done_epoch += epochs_todo
 
     if args.save:
         with open('brain.json', 'w') as f:

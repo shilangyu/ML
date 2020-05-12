@@ -1,6 +1,6 @@
 inputs: 784
-hidden_nodes: 20
-hidden_layers: 3
+hidden_nodes: 16
+hidden_layers: 2
 outputs: 10
 learning_rate: 0.01
 activation_function: sigmoid
