@@ -1,0 +1,8 @@
+name = "Neural"
+uuid = "61acc36e-3714-455d-89b0-28942bb4d42b"
+authors = ["shilangyu <xmarcinmarcin@gmail.com>"]
+version = "0.1.0"
+description = "Basically a Flux.jl clone without AD"
+
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
