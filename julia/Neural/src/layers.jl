@@ -22,6 +22,8 @@ function Base.show(io::IO, c::Chain)
 	print(io, ")")
 end
 
+parameters(c::Chain) = sum(map(parameters, c.layers))
+
 #= Fully connected dense layer =#
 
 struct Dense{W <: AbstractArray,B <: AbstractArray}
@@ -48,15 +50,23 @@ function Base.show(io::IO, d::Dense)
 	print(io, ")")
 end
 
+parameters(d::Dense) = prod(size(d.weights)) + prod(size(d.bias))
+
 #= Softmax outputs the inputs mapped to a set of probabilities =#
 #= 
 def dsoftmax(y):		
 return y * (-y + 1) =#
 
-function softmax(input::AbstractArray)
+struct Softmax end
+
+function (::Softmax)(input::AbstractArray)
 	normalized = input .- maximum(input)
 	
 	exp.(normalized) / sum(normalized)
 end
+
+Base.show(io::IO, ::Softmax) = print(io, "Softmax")
+
+parameters(::Softmax) = 0
 
 end
