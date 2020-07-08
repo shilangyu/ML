@@ -32,7 +32,7 @@ class CNN:
                 {'pool_size': layer.pool_size, 'pool_func': layer.pool_func})
             prev_depth = layer.amount_of_filters
 
-    def feedforward(self, input):
+    def feedforward_convolutions(self, input):
         nodesave = [input]
 
         for filters, pooling in zip(self.filters, self.poolings):
@@ -40,8 +40,23 @@ class CNN:
                 self.convolve(nodesave[-1], filters)))
             nodesave.append(
                 self.pool(nodesave[-1], pooling['pool_size'], pooling['pool_func']))
-
         return nodesave[1:]
+
+    def feedforward(self, input):
+        nodesave = self.feedforward_convolutions(input)
+
+        self.nn.feedforward(nodesave[-1].ravel())
+
+        nodesave.extend(self.nn.nodesave)
+
+        return nodesave
+
+    def backpropagate(self, input, goal_output):
+        self.nn.backpropagate(self.feedforward_convolutions(
+            input)[-1].ravel(), goal_output)
+
+    def predict(self, input):
+        return np.argmax(self.feedforward(input)[-1])
 
     @staticmethod
     def convolve(matrix, filters):
@@ -81,14 +96,30 @@ class CNN:
 
         return out
 
+    def online_train(self, inputs, goal_outputs, epochs):
+        n = max(len(inputs), len(goal_outputs))
+        order = np.array(range(n))
+        for _ in range(epochs):
+            np.random.shuffle(order)
+            for i in order:
+                self.backpropagate(inputs[i], goal_outputs[i])
+
+    def test_guesses(self, inputs, goal_outputs):
+        guessed_correctly = 0
+        n = max(len(inputs), len(goal_outputs))
+        for i, o in zip(inputs, goal_outputs):
+            if np.argmax(o) == self.predict(i):
+                guessed_correctly += 1
+        return guessed_correctly / n
+
 
 # print(CNN.convolve(np.array([[[1, 1, 1, 0, 0], [0, 1, 1, 1, 0], [0, 0, 1, 1, 1], [
 #       0, 0, 1, 1, 0], [0, 1, 1, 0, 0]]]), np.array([[[[1, 0, 1], [0, 1, 0], [1, 0, 1]]]])))
 # print(CNN.pool(np.array([[[1, 1, 2, 4, 3], [5, 6, 7, 8, 1], [
 #       3, 2, 1, 0, 2], [1, 2, 3, 4, 9]]]), 2, np.max))
-
-cnn = CNN([ConvLayerConfig(8, 5, 1, np.max), ConvLayerConfig(
-    8, 5, 2, np.max)], 1, activation_functions.relu, NN(800, 16, 10, 2, activation_functions.sigmoid, activation_functions.dsigmoid, 0.01))
+cnn = CNN([ConvLayerConfig(8, 5, 2, np.max), ConvLayerConfig(
+    8, 3, 2, np.max)], 1, activation_functions.relu, NN(200, 16, 10, 2, activation_functions.sigmoid, activation_functions.dsigmoid, 0.01))
 
 input = np.linspace(0, 1, 28*28).reshape((1, 28, 28))
 print(list(map(lambda x: x.shape, cnn.feedforward(input))))
+print(cnn.predict(input))
