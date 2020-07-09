@@ -1,10 +1,10 @@
 using BenchmarkTools
 
-import Neural: layers, activations
+import Neural: layers, activations, losses
 
 suite = BenchmarkGroup()
 
-create_nn = () -> layers.Chain(
+create_nn() = layers.Chain(
 	layers.Dense(28^2 => 16^3, activations.sigmoid...),
 	layers.Dense(16^3 => 16, activations.leaky_relu...),
 	layers.Dense(16 => 10),
