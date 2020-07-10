@@ -89,9 +89,9 @@ return y * (-y + 1) =#
 struct Softmax end
 
 function (::Softmax)(input::AbstractArray)
-	normalized = input .- maximum(input)
+	exponated = exp.(input .- maximum(input))
 	
-	exp.(normalized) / sum(normalized)
+	exponated / sum(exponated)
 end
 
 Base.show(io::IO, ::Softmax) = print(io, "Softmax")
