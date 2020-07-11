@@ -3,6 +3,60 @@ module layers
 import Base.tail
 
 
+"""
+Each layer:
+
+- can be called directly
+
+```julia
+d = Dense(10 => 5)
+d(rand(10))
+```
+
+- can be pretty-printed
+
+```julia
+d = Dense(10 => 5)
+println(d)
+```
+
+- has a number of parameters
+
+```julia
+d = Dense(10 => 5)
+parameters(d)
+```
+
+- can calculate their gradients
+
+```julia
+d = Dense(10 => 5)
+i = rand(10)
+error = ...
+∇ = gradients(d, i, d(i), error)
+```
+
+- can calculate their errors
+
+```julia
+d = Dense(10 => 5)
+i = rand(10)
+error = ...
+error = errors(d, i, d(i), error)
+```
+
+- can apply the gradients
+
+```julia
+d = Dense(10 => 5)
+i = rand(10)
+error = ...
+∇ = gradients(d, i, d(i), error)
+apply!(d, ∇)
+```
+"""
+
+
 #= A Chain connects layers and propagates the outputs. Behaves like a singular layer. =#
 
 struct Chain{T <: Tuple}
@@ -24,16 +78,14 @@ end
 
 parameters(c::Chain) = sum(map(parameters, c.layers))
 
-function gradients(c::Chain, input::AbstractArray, output::AbstractArray, error::AbstractArray)
+function gradients(c::Chain, input::AbstractArray, ::AbstractArray, error::AbstractArray)
 	intermediate = []
-	
-	local out::AbstractArray
 	
 	# collect input/output of each layer in feedforward
 	for layer in c.layers
-		out = layer(input)
-		push!(intermediate, (input, out))
-		input = out
+		output = layer(input)
+		push!(intermediate, (input, output))
+		input = output
 	end
 	
 	∇ = []
@@ -41,15 +93,34 @@ function gradients(c::Chain, input::AbstractArray, output::AbstractArray, error:
 	# backpropagate the errors
 	for layer in Iterators.reverse(c.layers)
 		curr = pop!(intermediate)
-		push!(∇, gradients(layer, curr..., error))
+		pushfirst!(∇, gradients(layer, curr..., error))
 		error = errors(layer, curr..., error)
 	end
 
 	return ∇
 end
 
+function errors(c::Chain, input::AbstractArray, ::AbstractArray, error::AbstractArray)
+	intermediate = []
+	
+	# collect input/output of each layer in feedforward
+	for layer in c.layers
+		output = layer(input)
+		push!(intermediate, (input, output))
+		input = output
+	end
+	
+	# backpropagate the errors
+	for layer in Iterators.reverse(c.layers)
+		error = errors(layer, pop!(intermediate)..., error)
+	end
+
+	return error
+end
+
+
 function apply!(c::Chain, ∇)
-		for (layer, grad) in zip(Iterators.reverse(c.layers), ∇)
+		for (layer, grad) in Iterators.reverse(zip(c.layers, ∇))
 			apply!(layer, grad)
 		end
 end
@@ -70,9 +141,7 @@ function Dense(dimensions::Pair{<:Integer,<:Integer}, σ=identity, ∂σ=identit
 	Dense(rand(out, in) * 2 .- 1, rand(out) * 2 .- 1, σ, ∂σ)
 end
 
-function (d::Dense)(input::AbstractArray)
-	d.σ.(d.weights * input .+ d.bias)
-end
+(d::Dense)(input::AbstractArray) = d.σ.(d.weights * input .+ d.bias)
 
 function Base.show(io::IO, d::Dense)
 	print(io, "Dense(", size(d.weights, 2), " => ", size(d.weights, 1))
@@ -87,9 +156,7 @@ function gradients(d::Dense, input::AbstractArray, output::AbstractArray, error:
 	return (weights = ∇ * transpose(input), bias = ∇)
 end
 
-function errors(d::Dense, ::AbstractArray, ::AbstractArray, error::AbstractArray)
-	transpose(d.weights) * error
-end
+errors(d::Dense, ::AbstractArray, ::AbstractArray, error::AbstractArray) = transpose(d.weights) * error
 
 function apply!(d::Dense, ∇)
 	d.weights -= ∇[:weights]
@@ -116,19 +183,13 @@ Base.show(io::IO, ::Softmax) = print(io, "Softmax")
 parameters(::Softmax) = 0
 
 
-function gradients(s::Softmax, input::AbstractArray, output::AbstractArray, error::AbstractArray)
-	()
-end
+gradients(::Softmax, ::AbstractArray, ::AbstractArray, ::AbstractArray) = ()
 
 # is that safe? This softmax assumes there's a dense layer beforehand, otherwise the returned error is wrong
 # softmax should be an activation function instead of a layer anyways... 
 # Currently it isn't because to compute its output it has to know the whole input, not a singular neuron
-function errors(s::Softmax, input::AbstractArray, output::AbstractArray, error::AbstractArray)
-	@. s.∂(output) * error / input
-end
+errors(s::Softmax, input::AbstractArray, output::AbstractArray, error::AbstractArray) = @. s.∂(output) * error / input
 
-function apply!(s::Softmax, ∇)
-
-end
+apply!(::Softmax, ∇) = ()
 
 end
