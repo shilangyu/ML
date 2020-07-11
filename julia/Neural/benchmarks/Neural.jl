@@ -22,8 +22,11 @@ suite[dense]["initialization"] = @benchmarkable create_nn()
 
 suite[dense]["feedforward"] = @benchmarkable nn(input)
 
-suite[dense]["backpropagation"] = @benchmarkable layers.adjust!(nn, input, output, losses.squared_error...)
+out = nn(input)
+suite[dense]["getting gradients"] = @benchmarkable layers.gradients(nn, input, nn(input), losses.squared_error[2](out, output))
 
+∇ = layers.gradients(nn, input, out, losses.squared_error[2](out, output))
+suite[dense]["applying gradients"] = @benchmarkable layers.apply!(nn, ∇)
 
 tune!(suite)
 println(run(suite))

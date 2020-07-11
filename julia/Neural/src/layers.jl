@@ -3,7 +3,7 @@ module layers
 import Base.tail
 
 
-#= A Chain connects layers and propagates the outputs. Behaves like a singular layer except when adjust!-ing =#
+#= A Chain connects layers and propagates the outputs. Behaves like a singular layer. =#
 
 struct Chain{T <: Tuple}
 	layers::T
@@ -24,29 +24,39 @@ end
 
 parameters(c::Chain) = sum(map(parameters, c.layers))
 
-function adjust!(c::Chain, input::AbstractArray, y::AbstractArray, loss::Function, ∂loss::Function)
+function gradients(c::Chain, input::AbstractArray, output::AbstractArray, error::AbstractArray)
 	intermediate = []
-
+	
 	local out::AbstractArray
-
+	
 	# collect input/output of each layer in feedforward
 	for layer in c.layers
 		out = layer(input)
 		push!(intermediate, (input, out))
 		input = out
 	end
-
-	error = ∂loss(out, y)
+	
+	∇ = []
 
 	# backpropagate the errors
 	for layer in Iterators.reverse(c.layers)
-		error = adjust!(layer, pop!(intermediate)..., error)
+		curr = pop!(intermediate)
+		push!(∇, gradients(layer, curr..., error))
+		error = errors(layer, curr..., error)
 	end
+
+	return ∇
+end
+
+function apply!(c::Chain, ∇)
+		for (layer, grad) in zip(Iterators.reverse(c.layers), ∇)
+			apply!(layer, grad)
+		end
 end
 
 #= Fully connected dense layer =#
 
-struct Dense{W <: AbstractArray,B <: AbstractArray}
+mutable struct Dense{W <: AbstractArray,B <: AbstractArray}
 	weights::W
 	bias::B
 	
@@ -72,19 +82,22 @@ end
 
 parameters(d::Dense) = prod(size(d.weights)) + prod(size(d.bias))
 
-function adjust!(d::Dense, input::AbstractArray, output::AbstractArray, error::AbstractArray)
-	grad = d.∂σ.(output) .* error
+function gradients(d::Dense, input::AbstractArray, output::AbstractArray, error::AbstractArray)
+	∇ = d.∂σ.(output) .* error
+	return (weights = ∇ * transpose(input), bias = ∇)
+end
 
-	d.bias .-= grad
-	d.weights .-= grad * transpose(input)
-
+function errors(d::Dense, ::AbstractArray, ::AbstractArray, error::AbstractArray)
 	transpose(d.weights) * error
 end
 
+function apply!(d::Dense, ∇)
+	d.weights -= ∇[:weights]
+	d.bias -= ∇[:bias]
+end
+
+
 #= Softmax outputs the inputs mapped to a set of probabilities =#
-#= 
-def dsoftmax(y):		
-return y * (-y + 1) =#
 
 struct Softmax 
 	∂::Function
@@ -102,11 +115,20 @@ Base.show(io::IO, ::Softmax) = print(io, "Softmax")
 
 parameters(::Softmax) = 0
 
+
+function gradients(s::Softmax, input::AbstractArray, output::AbstractArray, error::AbstractArray)
+	()
+end
+
 # is that safe? This softmax assumes there's a dense layer beforehand, otherwise the returned error is wrong
 # softmax should be an activation function instead of a layer anyways... 
 # Currently it isn't because to compute its output it has to know the whole input, not a singular neuron
-function adjust!(s::Softmax, input::AbstractArray, output::AbstractArray, error::AbstractArray)
+function errors(s::Softmax, input::AbstractArray, output::AbstractArray, error::AbstractArray)
 	@. s.∂(output) * error / input
+end
+
+function apply!(s::Softmax, ∇)
+
 end
 
 end
