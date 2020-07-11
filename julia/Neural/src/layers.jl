@@ -1,8 +1,3 @@
-module layers
-
-import Base.tail
-import ..activations
-
 """
 Each layer:
 
@@ -55,13 +50,18 @@ error = ...
 apply!(d, ∇)
 ```
 """
+module layers
+
+import Base.tail
+import ..activations
 
 
-#= A Chain connects layers and propagates the outputs. Behaves like a singular layer. =#
-
+"""
+A Chain connects layers and propagates the outputs. Behaves like a singular layer.
+"""
 struct Chain{T <: Tuple}
 	layers::T
-
+	
 	Chain(ls...) = new{typeof(ls)}(ls)
 end
 
@@ -89,14 +89,14 @@ function gradients(c::Chain, input::AbstractArray, ::AbstractArray, error::Abstr
 	end
 	
 	∇ = []
-
+	
 	# backpropagate the errors
 	for layer in Iterators.reverse(c.layers)
 		curr = pop!(intermediate)
 		pushfirst!(∇, gradients(layer, curr..., error))
 		error = errors(layer, curr..., error)
 	end
-
+	
 	return ∇
 end
 
@@ -114,19 +114,21 @@ function errors(c::Chain, input::AbstractArray, ::AbstractArray, error::Abstract
 	for layer in Iterators.reverse(c.layers)
 		error = errors(layer, pop!(intermediate)..., error)
 	end
-
+	
 	return error
 end
 
 
 function apply!(c::Chain, ∇)
-		for (layer, grad) in Iterators.reverse(zip(c.layers, ∇))
-			apply!(layer, grad)
-		end
+	for (layer, grad) in Iterators.reverse(zip(c.layers, ∇))
+		apply!(layer, grad)
+	end
 end
 
-#= Fully connected dense layer =#
 
+"""
+Fully connected dense layer.
+"""
 mutable struct Dense{W <: AbstractArray,B <: AbstractArray}
 	weights::W
 	bias::B
@@ -164,8 +166,9 @@ function apply!(d::Dense, ∇)
 end
 
 
-#= Softmax outputs the inputs mapped to a set of probabilities =#
-
+"""
+Softmax outputs the inputs mapped to a set of probabilities.
+"""
 struct Softmax 
 	∂::Function
 
