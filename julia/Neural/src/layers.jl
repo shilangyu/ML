@@ -27,7 +27,7 @@ parameters(c::Chain) = sum(map(parameters, c.layers))
 function adjust!(c::Chain, input::AbstractArray, y::AbstractArray, loss::Function, ∂loss::Function)
 	intermediate = []
 
-	out::AbstractArray = []
+	local out::AbstractArray
 
 	# collect input/output of each layer in feedforward
 	for layer in c.layers
@@ -86,7 +86,11 @@ end
 def dsoftmax(y):		
 return y * (-y + 1) =#
 
-struct Softmax end
+struct Softmax 
+	∂::Function
+
+	Softmax() = new(y -> y * (-y + 1))
+end
 
 function (::Softmax)(input::AbstractArray)
 	exponated = exp.(input .- maximum(input))
@@ -100,11 +104,9 @@ parameters(::Softmax) = 0
 
 # is that safe? This softmax assumes there's a dense layer beforehand, otherwise the returned error is wrong
 # softmax should be an activation function instead of a layer anyways... 
-# Currently it isn't because to compute its output it has to know the whole input, not singular neurons 
-function adjust!(::Softmax, input::AbstractArray, output::AbstractArray, error::AbstractArray)
-	∂softmax(y) = y * (-y + 1)
-		
-	@. ∂softmax(output) * error / input
+# Currently it isn't because to compute its output it has to know the whole input, not a singular neuron
+function adjust!(s::Softmax, input::AbstractArray, output::AbstractArray, error::AbstractArray)
+	@. s.∂(output) * error / input
 end
 
 end
