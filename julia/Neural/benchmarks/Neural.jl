@@ -5,8 +5,8 @@ import Neural: layers, activations, losses
 suite = BenchmarkGroup()
 
 create_nn() = layers.Chain(
-	layers.Dense(28^2 => 16^3, activations.sigmoid...),
-	layers.Dense(16^3 => 16, activations.leaky_relu...),
+	layers.Dense(28^2 => 16^3, activations.sigmoid),
+	layers.Dense(16^3 => 16, activations.leaky_relu),
 	layers.Dense(16 => 10),
 	layers.Softmax()
 )
@@ -23,9 +23,9 @@ suite[dense]["initialization"] = @benchmarkable create_nn()
 suite[dense]["feedforward"] = @benchmarkable nn(input)
 
 out = nn(input)
-suite[dense]["getting gradients"] = @benchmarkable layers.gradients(nn, input, nn(input), losses.squared_error[2](out, output))
+suite[dense]["getting gradients"] = @benchmarkable layers.gradients(nn, input, nn(input), losses.squared_error[:error](out, output))
 
-∇ = layers.gradients(nn, input, out, losses.squared_error[2](out, output))
+∇ = layers.gradients(nn, input, out, losses.squared_error[:error](out, output))
 suite[dense]["applying gradients"] = @benchmarkable layers.apply!(nn, ∇)
 
 tune!(suite)

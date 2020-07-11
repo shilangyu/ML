@@ -1,7 +1,7 @@
 module layers
 
 import Base.tail
-
+import ..activations
 
 """
 Each layer:
@@ -135,10 +135,10 @@ mutable struct Dense{W <: AbstractArray,B <: AbstractArray}
 	∂σ
 end
 
-function Dense(dimensions::Pair{<:Integer,<:Integer}, σ=identity, ∂σ=identity)
+function Dense(dimensions::Pair{<:Integer,<:Integer}, func::activations.ActivationTuple=(base = identity, ∂y = identity))
 	in, out = dimensions
 	
-	Dense(rand(out, in) * 2 .- 1, rand(out) * 2 .- 1, σ, ∂σ)
+	Dense(rand(out, in) * 2 .- 1, rand(out) * 2 .- 1, func...)
 end
 
 (d::Dense)(input::AbstractArray) = d.σ.(d.weights * input .+ d.bias)

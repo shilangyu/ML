@@ -1,21 +1,27 @@
 module activations
 
-#= 
-Activation functions as tuples of 2 elements. 
-First element is the function itself while the second is its derivative with respect to y =#
+""" 
+Activation functions as 2 element named tuples.
 
-const sigmoid = (x -> 1 / (1 + exp(-x)),
-	y -> y * (1 - y))
+- `:base` function accepting `x`
+- `:∂y` derivative of the function accepting `y`
+"""
+const ActivationTuple = NamedTuple{(:base, :∂y),Tuple{T,U}} where T where U
 
-const relu = (x -> max(0, x),
-	y -> (y > 0) * 1)
 
-const tanh = (Base.tanh, 
-	y -> 1 - y^2)
+const sigmoid = (base = x -> 1 / (1 + exp(-x)),
+	∂y = y -> y * (1 - y))
 
-const leaky_relu = (x -> x > 0 ? x : x * 1e-2,
-	y -> y > 0 ? 1 : 1e-2)
-#= 
+const relu = (base = x -> max(0, x),
+	∂y = y -> (y > 0) * 1)
+
+const tanh = (base = Base.tanh, 
+	∂y = y -> 1 - y^2)
+
+const leaky_relu = (base = x -> x > 0 ? x : x * 1e-2,
+	∂y = y -> y > 0 ? 1 : 1e-2)
+
+	#= 
 def dsigmoid(y):
 		return y * (1-y)
 		

@@ -1,10 +1,18 @@
 module losses
 
-#= 
-Loss functions as tuples of 2 elements. 
-First element is the function itself while the second is its derivative (which is simply the output error) =#
 
-const squared_error = ((ŷ, y) -> sum((ŷ .- y).^2) / 2,
-	(ŷ, y) -> ŷ - y)
+"""
+Loss functions as 2 element named tuples.
+
+- `:cost` calculates the cost
+- `:error` calculates the error
+
+Each function accepts the recieved output and the expected one (respectively)
+"""
+const LossTuple = NamedTuple{(:cost, :error),Tuple{T,U}} where T where U
+
+
+const squared_error = (cost = (ŷ, y) -> sum((ŷ .- y).^2) / 2,
+	error = (ŷ, y) -> ŷ - y)
 
 end
